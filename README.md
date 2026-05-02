@@ -30,16 +30,28 @@ git checkout -b submission/M11234567-王小明
 
 ### 第四步：新增作業檔案
 
-在 `submissions/` 下建立以**你的學號-姓名**命名的目錄，並放入以下兩個必要檔案：
+在 `submissions/` 下建立以**你的學號-姓名**命名的目錄。`thumbnail.png` 必填，作業主檔**擇一**放入：
 
+**選項 A — 靜態 HTML 作業**（直接上傳網頁檔案）
 ```
 submissions/
 └── M11234567-王小明/
     ├── index.html       ← 作業網頁主檔（需包含 <title> 標籤）
     └── thumbnail.png    ← 作業截圖（≤ 500 KB）
 ```
-
 > 其他輔助檔案（CSS、JS、圖片）可一併放在同一目錄下。
+
+**選項 B — 外部部署連結**（Vercel / Netlify / GitHub Pages）
+```
+submissions/
+└── M11234567-王小明/
+    ├── url.txt          ← 第一行填入 https:// 開頭的部署網址
+    └── thumbnail.png    ← 作業截圖（≤ 500 KB）
+```
+`url.txt` 內容範例：
+```
+https://my-ai-project.vercel.app
+```
 
 ### 第五步：Commit 並 Push
 

@@ -34,11 +34,24 @@ const exampleExists = fs.existsSync(path.join(SUBMISSIONS_DIR, 'EXAMPLE-範例')
 
 const allDirs = exampleExists ? [...entries, 'EXAMPLE-範例'] : entries;
 
+function readUrlTxt(dirPath) {
+  try {
+    const content = fs.readFileSync(path.join(dirPath, 'url.txt'), 'utf8');
+    return content.split('\n').map(l => l.trim()).find(l => l.length > 0) || null;
+  } catch {
+    return null;
+  }
+}
+
 function buildCard(dirName) {
   const dirPath = path.join(SUBMISSIONS_DIR, dirName);
-  const title = extractTitle(path.join(dirPath, 'index.html'));
   const thumbSrc = `submissions/${dirName}/thumbnail.png`;
-  const linkHref = `submissions/${dirName}/index.html`;
+
+  const externalUrl = readUrlTxt(dirPath);
+  const isExternal = externalUrl !== null;
+  const linkHref = isExternal ? externalUrl : `submissions/${dirName}/index.html`;
+  const title = isExternal ? dirName : extractTitle(path.join(dirPath, 'index.html'));
+  const badge = isExternal ? `<span style="font-size:11px;color:#7eb8f7;margin-left:6px;">🔗 外部連結</span>` : '';
 
   const thumbnail = hasThumbnail(dirPath)
     ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:180px;object-fit:cover;display:block;">`
@@ -49,7 +62,7 @@ function buildCard(dirName) {
       <a href="${linkHref}" target="_blank" rel="noopener" style="display:block;text-decoration:none;color:inherit;">
         ${thumbnail}
         <div style="padding:12px 14px;">
-          <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:#222;">${title}</div>
+          <div style="font-size:15px;font-weight:600;margin-bottom:4px;color:#222;">${title}${badge}</div>
           <div style="font-size:12px;color:#888;">${dirName}</div>
         </div>
       </a>

@@ -71,8 +71,12 @@ if (hyphenIdx === -1 || dirName.slice(hyphenIdx + 1).length === 0) {
 const submissionPath = path.join('submissions', dirName);
 
 const indexPath = path.join(submissionPath, 'index.html');
-if (!fs.existsSync(indexPath)) {
-  fail(`Missing required file: index.html (in ${submissionPath})`);
+const urlPath = path.join(submissionPath, 'url.txt');
+const hasIndex = fs.existsSync(indexPath);
+const hasUrl = fs.existsSync(urlPath);
+
+if (!hasIndex && !hasUrl) {
+  fail(`Submission must include either index.html or url.txt (in ${submissionPath})`);
 }
 
 const thumbPath = path.join(submissionPath, 'thumbnail.png');
@@ -80,7 +84,16 @@ if (!fs.existsSync(thumbPath)) {
   fail(`Missing required file: thumbnail.png (in ${submissionPath})`);
 }
 
-// --- 6. Thumbnail size ---
+// --- 6. url.txt format ---
+if (hasUrl) {
+  const urlContent = fs.readFileSync(urlPath, 'utf8');
+  const firstLine = urlContent.split('\n').map(l => l.trim()).find(l => l.length > 0) || '';
+  if (!firstLine.startsWith('https://')) {
+    fail(`url.txt must contain a valid https:// URL (got: "${firstLine}")`);
+  }
+}
+
+// --- 7. Thumbnail size ---
 const thumbStat = fs.statSync(thumbPath);
 if (thumbStat.size > 512000) {
   fail(`thumbnail.png exceeds 500 KB limit (${(thumbStat.size / 1024).toFixed(1)} KB)`);
