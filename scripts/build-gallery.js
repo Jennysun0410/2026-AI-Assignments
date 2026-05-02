@@ -64,7 +64,7 @@ const html = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>2026 AI 訓練課程 — 作業展示</title>
+  <title>DITLDESIGN 2026 AI 訓練課程 — 作業展示</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f7; color: #333; min-height: 100vh; }
@@ -83,7 +83,7 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <header>
-    <h1>2026 AI 訓練課程 — 作業展示</h1>
+    <h1>DITLDESIGN 2026 AI 訓練課程 — 作業展示</h1>
     <p>DITLDESIGN · 共 ${count} 件作業</p>
     <nav>
       <a href="git-guide.html">Git 工作流程說明</a>
