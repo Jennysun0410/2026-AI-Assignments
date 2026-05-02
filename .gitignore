@@ -8,3 +8,4 @@ openspec/
 
 # macOS
 .DS_Store
+openspec/.vector-search.db*
