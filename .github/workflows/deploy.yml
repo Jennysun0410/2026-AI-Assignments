@@ -32,10 +32,15 @@ jobs:
       - name: Build gallery
         run: node scripts/build-gallery.js
 
+      - name: Prepare publish dir
+        run: |
+          mkdir -p _site
+          cp index.html git-guide.html _site/
+          cp -r submissions _site/submissions
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: _site
           publish_branch: gh-pages
-          exclude_assets: '.git,.github,openspec,.spectra,.claude,scripts,node_modules'
