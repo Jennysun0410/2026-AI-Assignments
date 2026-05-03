@@ -14,7 +14,7 @@ function fail(message) {
 // --- 1. Get changed files ---
 let changedFiles;
 try {
-  changedFiles = execSync('git diff --name-only origin/main...HEAD', { encoding: 'utf8' })
+  changedFiles = execSync('git -c core.quotePath=false diff --name-only origin/main...HEAD', { encoding: 'utf8' })
     .trim()
     .split('\n')
     .filter(Boolean);
