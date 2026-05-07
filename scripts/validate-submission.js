@@ -28,6 +28,9 @@ if (changedFiles.length === 0) {
 // --- 2. Identify touched submission directories ---
 const DIR_PATTERN = /^[A-Za-z0-9]+-\S+$/;
 
+// Files that may legitimately appear in a fork diff without being part of the submission
+const ALLOWED_OUTSIDE = new Set(['.gitignore']);
+
 const submissionDirs = new Set();
 const outsideFiles = [];
 
@@ -35,7 +38,7 @@ for (const f of changedFiles) {
   const match = f.match(/^submissions\/([^/]+)\//);
   if (match) {
     submissionDirs.add(match[1]);
-  } else {
+  } else if (!ALLOWED_OUTSIDE.has(f)) {
     outsideFiles.push(f);
   }
 }
@@ -78,10 +81,16 @@ if (!hasIndex && !hasUrl) {
   fail(`Submission must include either index.html or url.txt (in ${submissionPath})`);
 }
 
-const thumbPath = path.join(submissionPath, 'thumbnail.png');
-if (!fs.existsSync(thumbPath)) {
-  fail(`Missing required file: thumbnail.png (in ${submissionPath})`);
+// Accept thumbnail.png, thumbnail.jpg, or thumbnail.jpeg
+const THUMB_CANDIDATES = ['thumbnail.png', 'thumbnail.jpg', 'thumbnail.jpeg'];
+const foundThumb = THUMB_CANDIDATES.find(name => fs.existsSync(path.join(submissionPath, name)));
+if (!foundThumb) {
+  fail(`Missing required thumbnail (in ${submissionPath}). Please provide thumbnail.png (recommended), thumbnail.jpg, or thumbnail.jpeg.`);
 }
+if (foundThumb !== 'thumbnail.png') {
+  console.warn(`WARNING: thumbnail is "${foundThumb}". PNG format is recommended for better quality and smaller file size. Rename it to thumbnail.png if possible.`);
+}
+const thumbPath = path.join(submissionPath, foundThumb);
 
 // --- 6. url.txt format ---
 if (hasUrl) {
@@ -95,7 +104,7 @@ if (hasUrl) {
 // --- 7. Thumbnail size ---
 const thumbStat = fs.statSync(thumbPath);
 if (thumbStat.size > 512000) {
-  fail(`thumbnail.png exceeds 500 KB limit (${(thumbStat.size / 1024).toFixed(1)} KB)`);
+  fail(`${foundThumb} exceeds 500 KB limit (${(thumbStat.size / 1024).toFixed(1)} KB)`);
 }
 
 console.log(`✓ Submission validated: ${dirName}`);
