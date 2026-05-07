@@ -19,8 +19,11 @@ function extractTitle(htmlPath) {
   }
 }
 
-function hasThumbnail(dirPath) {
-  return fs.existsSync(path.join(dirPath, 'thumbnail.png'));
+function findThumbnail(dirPath) {
+  for (const name of ['thumbnail.png', 'thumbnail.jpg', 'thumbnail.jpeg']) {
+    if (fs.existsSync(path.join(dirPath, name))) return name;
+  }
+  return null;
 }
 
 // Collect and sort submissions alphabetically by directory name
@@ -36,8 +39,11 @@ const allDirs = exampleExists ? [...entries, 'EXAMPLE-範例'] : entries;
 
 function readUrlTxt(dirPath) {
   try {
-    const content = fs.readFileSync(path.join(dirPath, 'url.txt'), 'utf8');
-    return content.split('\n').map(l => l.trim()).find(l => l.length > 0) || null;
+    const lines = fs.readFileSync(path.join(dirPath, 'url.txt'), 'utf8')
+      .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const url = lines[0] || null;
+    const title = lines[1] || null;   // optional second line
+    return url ? { url, title } : null;
   } catch {
     return null;
   }
@@ -45,15 +51,19 @@ function readUrlTxt(dirPath) {
 
 function buildCard(dirName) {
   const dirPath = path.join(SUBMISSIONS_DIR, dirName);
-  const thumbSrc = `submissions/${dirName}/thumbnail.png`;
+  const thumbFile = findThumbnail(dirPath);
+  const thumbSrc = thumbFile ? `submissions/${dirName}/${thumbFile}` : null;
 
-  const externalUrl = readUrlTxt(dirPath);
-  const isExternal = externalUrl !== null;
-  const linkHref = isExternal ? externalUrl : `submissions/${dirName}/index.html`;
-  const title = isExternal ? dirName : extractTitle(path.join(dirPath, 'index.html'));
+  const urlInfo = readUrlTxt(dirPath);
+  const isExternal = urlInfo !== null;
+  const linkHref = isExternal ? urlInfo.url : `submissions/${dirName}/index.html`;
+  // Title priority: url.txt second line → html <title> → directory name
+  const title = isExternal
+    ? (urlInfo.title || dirName)
+    : extractTitle(path.join(dirPath, 'index.html'));
   const badge = isExternal ? `<span style="font-size:11px;color:#7eb8f7;margin-left:6px;">🔗 外部連結</span>` : '';
 
-  const thumbnail = hasThumbnail(dirPath)
+  const thumbnail = thumbSrc
     ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:180px;object-fit:cover;display:block;">`
     : `<div style="width:100%;height:180px;background:#ccc;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">No Thumbnail</div>`;
 
