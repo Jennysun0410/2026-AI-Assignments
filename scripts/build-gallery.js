@@ -8,6 +8,8 @@ const path = require('path');
 
 const SUBMISSIONS_DIR = path.join(__dirname, '..', 'submissions');
 const OUTPUT_FILE = path.join(__dirname, '..', 'index.html');
+const JSON_OUTPUT_FILE = path.join(__dirname, '..', 'gallery.json');
+const BASE_URL = 'https://drhhtang-pixel.github.io/2026-AI-Assignments';
 
 function extractTitle(htmlPath) {
   try {
@@ -131,3 +133,35 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
 console.log(`✓ Gallery built: ${count} submission(s) → index.html`);
+
+// Generate gallery.json (excludes EXAMPLE-範例)
+const jsonEntries = entries.map(dirName => {
+  const dirPath = path.join(SUBMISSIONS_DIR, dirName);
+  const thumbFile = findThumbnail(dirPath);
+  const urlInfo = readUrlTxt(dirPath);
+  const isExternal = urlInfo !== null;
+  const title = isExternal
+    ? (urlInfo.title || dirName)
+    : extractTitle(path.join(dirPath, 'index.html'));
+  return {
+    dirName,
+    title,
+    href: isExternal
+      ? urlInfo.url
+      : `${BASE_URL}/submissions/${dirName}/index.html`,
+    isExternal,
+    thumbnail: thumbFile
+      ? `${BASE_URL}/submissions/${dirName}/${thumbFile}`
+      : null,
+  };
+});
+
+const galleryJson = {
+  count: jsonEntries.length,
+  generatedAt: new Date().toISOString(),
+  baseUrl: BASE_URL,
+  entries: jsonEntries,
+};
+
+fs.writeFileSync(JSON_OUTPUT_FILE, JSON.stringify(galleryJson, null, 2), 'utf8');
+console.log(`✓ gallery.json written: ${jsonEntries.length} entries`);

@@ -35,7 +35,7 @@ jobs:
       - name: Prepare publish dir
         run: |
           mkdir -p _site
-          cp index.html git-guide.html _site/
+          cp index.html git-guide.html gallery.json _site/
           cp -r submissions _site/submissions
           cp -r assets _site/assets
 
