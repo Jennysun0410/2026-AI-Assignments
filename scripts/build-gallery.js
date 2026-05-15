@@ -64,8 +64,8 @@ function buildCard(dirName) {
   const badge = isExternal ? `<span style="font-size:11px;color:#7eb8f7;margin-left:6px;">🔗 外部連結</span>` : '';
 
   const thumbnail = thumbSrc
-    ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:180px;object-fit:cover;display:block;">`
-    : `<div style="width:100%;height:180px;background:#ccc;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">No Thumbnail</div>`;
+    ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:300px;object-fit:cover;display:block;">`
+    : `<div style="width:100%;height:300px;background:#ccc;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">No Thumbnail</div>`;
 
   return `
     <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);">
@@ -99,9 +99,9 @@ const html = `<!DOCTYPE html>
     header nav { margin-top: 10px; }
     header nav a { color: #7eb8f7; font-size: 13px; text-decoration: none; margin-right: 20px; }
     header nav a:hover { text-decoration: underline; }
-    main { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+    main { max-width: 1600px; margin: 32px auto; padding: 0 20px; }
     .meta { font-size: 13px; color: #888; margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
     .empty { text-align: center; padding: 60px 20px; color: #aaa; font-size: 15px; }
     footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #bbb; }
   </style>
