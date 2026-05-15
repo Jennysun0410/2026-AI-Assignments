@@ -310,6 +310,41 @@ vercel --prod
 
 ---
 
+## 安全性檢查清單
+
+系統完成後請逐項確認：
+
+### 秘密不洩露
+
+| 檢查項目 | 做法 |
+|----------|------|
+| `.env.local` 未進 git | 確認 `.gitignore` 有 `.env*`；執行 `git log --all --full-history -- .env.local` 應無輸出 |
+| `SUPABASE_SERVICE_KEY` 只在後端 | `lib/supabase.ts` 第一行必須是 `import 'server-only'` |
+| Vercel 環境變數正確 | 執行 `vercel env ls` 確認六個變數都在 production |
+
+### 存取控制
+
+| 檢查項目 | 位置 |
+|----------|------|
+| 所有 API 路由都有 `requireAdmin()` 驗證 | `app/api/admin/allowlist/route.ts` |
+| Middleware 保護未登入者 | `middleware.ts` — 未登入 → `/login` |
+| Middleware 保護非 admin | `middleware.ts` — 非 admin 進 `/admin/*` → `/403` |
+| Bootstrap admin 無法被刪除或降級 | `route.ts` — DELETE 和 PATCH 都有檢查 |
+| 最後一個 admin 受保護 | `route.ts` — `getAdminCount() <= 1` 時拒絕操作 |
+
+### 設計決定與取捨
+
+**`bootstrapAdmin` email 傳到前端：**
+`drhhtang@gmail.com` 這個值會出現在管理頁面的 HTML 裡。這不是秘密洩露——這個 email 本來就顯示在名單上，且只有已登入的 admin 才看得到這頁。真正的保護邏輯在後端 API，前端只是用來顯示「保護」標籤。
+
+**Session 不即時撤銷：**
+刪除某人的白名單後，他現有的 session 在到期前（預設 30 天）仍然有效。這是刻意的取捨，避免複雜的 session 撤銷機制。如需即時踢出，在 `lib/auth.ts` 的 `NextAuth({})` 設定加入：
+```ts
+session: { maxAge: 60 * 60 }  // 1 小時後 session 到期
+```
+
+---
+
 ## 常見問題
 
 **Q：為什麼 signIn callback 驗證，而不是 middleware？**
