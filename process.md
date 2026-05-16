@@ -310,6 +310,48 @@ vercel --prod
 
 ---
 
+## 綁定自訂 Domain（選用）
+
+若要用自己的 domain（例如 `ai.ditldesign.com`）取代 Vercel 預設網址，需要三個步驟：
+
+**1. 在 Vercel 加入 domain：**
+```bash
+vercel domains add "ai.ditldesign.com"
+```
+
+**2. 在 DNS 新增 CNAME 記錄：**
+| Name | Type  | Value                |
+|------|-------|----------------------|
+| `ai` | CNAME | `cname.vercel-dns.com` |
+
+> ⚠️ **注意**：CNAME 只能指向 Vercel（`cname.vercel-dns.com`），不能同時指向 GitHub Pages。如果你之前曾在 GitHub Pages 設定過這個 domain，必須先清除 GitHub Pages 的 Custom domain 欄位（Settings → Pages → Custom domain 清空 → Save）。
+
+**3. 等待 DNS 傳播（最多 4 小時）：**
+
+DNS 的 TTL 通常是 4 小時。在此期間，部分地區的瀏覽器可能仍連到舊的位置，出現 GitHub Pages 404 頁面。這是正常現象，**不代表設定錯誤**。
+
+驗證方法：
+- 用 `https://ditl-ai-gallery.vercel.app`（Vercel 預設網址）先測試功能，確認一切正常
+- 等 4 小時後再試 `https://ai.ditldesign.com`
+- 或用 `curl -I https://ai.ditldesign.com` 確認已回應 200
+
+**4. 更新 AUTH_URL 和 Google redirect URI：**
+
+若使用自訂 domain，還需要更新兩個地方：
+
+```bash
+vercel env rm AUTH_URL production --yes
+vercel env add AUTH_URL production --value "https://ai.ditldesign.com" --yes
+vercel --prod
+```
+
+並在 Google Cloud Console → Credentials → OAuth Client → 新增 redirect URI：
+```
+https://ai.ditldesign.com/api/auth/callback/google
+```
+
+---
+
 ## 安全性檢查清單
 
 系統完成後請逐項確認：
