@@ -8,6 +8,8 @@ const path = require('path');
 
 const SUBMISSIONS_DIR = path.join(__dirname, '..', 'submissions');
 const OUTPUT_FILE = path.join(__dirname, '..', 'index.html');
+const JSON_OUTPUT_FILE = path.join(__dirname, '..', 'gallery.json');
+const BASE_URL = 'https://drhhtang-pixel.github.io/2026-AI-Assignments';
 
 function extractTitle(htmlPath) {
   try {
@@ -19,8 +21,11 @@ function extractTitle(htmlPath) {
   }
 }
 
-function hasThumbnail(dirPath) {
-  return fs.existsSync(path.join(dirPath, 'thumbnail.png'));
+function findThumbnail(dirPath) {
+  for (const name of ['thumbnail.png', 'thumbnail.jpg', 'thumbnail.jpeg']) {
+    if (fs.existsSync(path.join(dirPath, name))) return name;
+  }
+  return null;
 }
 
 // Collect and sort submissions alphabetically by directory name
@@ -36,8 +41,11 @@ const allDirs = exampleExists ? [...entries, 'EXAMPLE-範例'] : entries;
 
 function readUrlTxt(dirPath) {
   try {
-    const content = fs.readFileSync(path.join(dirPath, 'url.txt'), 'utf8');
-    return content.split('\n').map(l => l.trim()).find(l => l.length > 0) || null;
+    const lines = fs.readFileSync(path.join(dirPath, 'url.txt'), 'utf8')
+      .split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const url = lines[0] || null;
+    const title = lines[1] || null;   // optional second line
+    return url ? { url, title } : null;
   } catch {
     return null;
   }
@@ -45,17 +53,21 @@ function readUrlTxt(dirPath) {
 
 function buildCard(dirName) {
   const dirPath = path.join(SUBMISSIONS_DIR, dirName);
-  const thumbSrc = `submissions/${dirName}/thumbnail.png`;
+  const thumbFile = findThumbnail(dirPath);
+  const thumbSrc = thumbFile ? `submissions/${dirName}/${thumbFile}` : null;
 
-  const externalUrl = readUrlTxt(dirPath);
-  const isExternal = externalUrl !== null;
-  const linkHref = isExternal ? externalUrl : `submissions/${dirName}/index.html`;
-  const title = isExternal ? dirName : extractTitle(path.join(dirPath, 'index.html'));
+  const urlInfo = readUrlTxt(dirPath);
+  const isExternal = urlInfo !== null;
+  const linkHref = isExternal ? urlInfo.url : `submissions/${dirName}/index.html`;
+  // Title priority: url.txt second line → html <title> → directory name
+  const title = isExternal
+    ? (urlInfo.title || dirName)
+    : extractTitle(path.join(dirPath, 'index.html'));
   const badge = isExternal ? `<span style="font-size:11px;color:#7eb8f7;margin-left:6px;">🔗 外部連結</span>` : '';
 
-  const thumbnail = hasThumbnail(dirPath)
-    ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:180px;object-fit:cover;display:block;">`
-    : `<div style="width:100%;height:180px;background:#ccc;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">No Thumbnail</div>`;
+  const thumbnail = thumbSrc
+    ? `<img src="${thumbSrc}" alt="${title}" style="width:100%;height:300px;object-fit:cover;display:block;">`
+    : `<div style="width:100%;height:300px;background:#ccc;display:flex;align-items:center;justify-content:center;color:#666;font-size:14px;">No Thumbnail</div>`;
 
   return `
     <div style="border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.08);">
@@ -89,9 +101,9 @@ const html = `<!DOCTYPE html>
     header nav { margin-top: 10px; }
     header nav a { color: #7eb8f7; font-size: 13px; text-decoration: none; margin-right: 20px; }
     header nav a:hover { text-decoration: underline; }
-    main { max-width: 1100px; margin: 32px auto; padding: 0 20px; }
+    main { max-width: 1600px; margin: 32px auto; padding: 0 20px; }
     .meta { font-size: 13px; color: #888; margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
     .empty { text-align: center; padding: 60px 20px; color: #aaa; font-size: 15px; }
     footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #bbb; }
   </style>
@@ -121,3 +133,35 @@ const html = `<!DOCTYPE html>
 
 fs.writeFileSync(OUTPUT_FILE, html, 'utf8');
 console.log(`✓ Gallery built: ${count} submission(s) → index.html`);
+
+// Generate gallery.json (excludes EXAMPLE-範例)
+const jsonEntries = entries.map(dirName => {
+  const dirPath = path.join(SUBMISSIONS_DIR, dirName);
+  const thumbFile = findThumbnail(dirPath);
+  const urlInfo = readUrlTxt(dirPath);
+  const isExternal = urlInfo !== null;
+  const title = isExternal
+    ? (urlInfo.title || dirName)
+    : extractTitle(path.join(dirPath, 'index.html'));
+  return {
+    dirName,
+    title,
+    href: isExternal
+      ? urlInfo.url
+      : `${BASE_URL}/submissions/${dirName}/index.html`,
+    isExternal,
+    thumbnail: thumbFile
+      ? `${BASE_URL}/submissions/${dirName}/${thumbFile}`
+      : null,
+  };
+});
+
+const galleryJson = {
+  count: jsonEntries.length,
+  generatedAt: new Date().toISOString(),
+  baseUrl: BASE_URL,
+  entries: jsonEntries,
+};
+
+fs.writeFileSync(JSON_OUTPUT_FILE, JSON.stringify(galleryJson, null, 2), 'utf8');
+console.log(`✓ gallery.json written: ${jsonEntries.length} entries`);
