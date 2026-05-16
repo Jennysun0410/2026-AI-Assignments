@@ -15,6 +15,12 @@
 
 管理員不需要改程式碼，直接在網站後台就能管理誰可以進來。
 
+> 使用者點擊「Google 登入」後，會看到 Google 的帳號選擇畫面：
+>
+> ![Google 帳號選擇](assets/screenshots/01-google-account-selection.png)
+>
+> 選擇帳號後，系統檢查白名單並決定是否放行。
+
 ```
 使用者點「Google 登入」
     │
@@ -287,6 +293,12 @@ Vercel 部署完成、拿到正式網址後（例如 `https://ditl-ai-gallery.ve
   https://ditl-ai-gallery.vercel.app/api/auth/callback/google
   ```
 
+> ⚠️ **若未補填 redirect URI，登入時會看到這個錯誤：**
+>
+> ![redirect_uri_mismatch 錯誤](assets/screenshots/02-redirect-uri-mismatch-error.png)
+>
+> 這表示 Google 找不到對應的 callback URL，修正方式就是補填上面的 URI。
+
 **2. 在 Vercel 加入 `AUTH_URL` 環境變數：**
 
 > ⚠️ 這步驟容易漏掉，但非常重要。Auth.js 用 `AUTH_URL` 決定傳給 Google 的 redirect URI。若未設定，Vercel 會使用每次部署不同的動態網址，導致 Google 驗證失敗（`redirect_uri_mismatch`）。
@@ -308,6 +320,10 @@ vercel --prod
 
 重新部署後讓環境變數生效。
 
+> ✅ **部署成功後，登入管理後台應該看到這個畫面：**
+>
+> ![管理後台成功畫面](assets/screenshots/03-admin-allowlist-success.png)
+
 ---
 
 ## 綁定自訂 Domain（選用）
@@ -324,11 +340,25 @@ vercel domains add "ai.ditldesign.com"
 |------|-------|----------------------|
 | `ai` | CNAME | `cname.vercel-dns.com` |
 
+設定完成後應該看到這樣的畫面：
+
+![DNS CNAME 設定](assets/screenshots/07-dns-cname-settings.png)
+
 > ⚠️ **注意**：CNAME 只能指向 Vercel（`cname.vercel-dns.com`），不能同時指向 GitHub Pages。如果你之前曾在 GitHub Pages 設定過這個 domain，必須先清除 GitHub Pages 的 Custom domain 欄位（Settings → Pages → Custom domain 清空 → Save）。
+>
+> GitHub Pages 的 Branch 設定應該如下（只選 branch，不填 custom domain）：
+>
+> ![GitHub Pages Branch 設定](assets/screenshots/06-github-pages-branch-settings.png)
+>
+> 若 CNAME 仍指向 GitHub Pages，會看到這個錯誤：
+>
+> ![GitHub Pages CNAME 錯誤](assets/screenshots/05-github-pages-cname-error.png)
 
 **3. 等待 DNS 傳播（最多 4 小時）：**
 
 DNS 的 TTL 通常是 4 小時。在此期間，部分地區的瀏覽器可能仍連到舊的位置，出現 GitHub Pages 404 頁面。這是正常現象，**不代表設定錯誤**。
+
+![DNS 傳播期間可能看到的 404](assets/screenshots/04-github-pages-404.png)
 
 驗證方法：
 - 用 `https://ditl-ai-gallery.vercel.app`（Vercel 預設網址）先測試功能，確認一切正常
